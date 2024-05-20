@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TravelAgency.FinancialService.API", "TravelAgency.FinancialService.API\TravelAgency.FinancialService.API.csproj", "{9BCB8928-FEE8-4E2A-9740-1145F76BC788}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4DC31D22-A87C-4622-A28E-E7E03F0A1AC2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{357ECC69-B184-4D51-A523-7FF5F0BD5E56}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solutionItems", "solutionItems", "{635C299D-69B2-4919-BD72-B55B03C806E8}"
+	ProjectSection(SolutionItems) = preProject
+		nuget.config = nuget.config
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9BCB8928-FEE8-4E2A-9740-1145F76BC788}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BCB8928-FEE8-4E2A-9740-1145F76BC788}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BCB8928-FEE8-4E2A-9740-1145F76BC788}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BCB8928-FEE8-4E2A-9740-1145F76BC788}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9BCB8928-FEE8-4E2A-9740-1145F76BC788} = {4DC31D22-A87C-4622-A28E-E7E03F0A1AC2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8A04A15B-04EF-42E7-BFCB-EB151440EDAC}
+	EndGlobalSection
+EndGlobal
