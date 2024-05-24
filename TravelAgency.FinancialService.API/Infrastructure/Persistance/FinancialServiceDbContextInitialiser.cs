@@ -7,7 +7,7 @@ using TravelAgency.FinancialService.API.Infrastructure.Stored;
 
 namespace TravelAgency.FinancialService.API.Infrastructure.Persistance;
 
-public class FinancialServiceDbContextInitialiser
+public sealed class FinancialServiceDbContextInitialiser
 {
     private readonly FinancialServiceDbContext _context;
     private readonly DatabaseSettings _settings;

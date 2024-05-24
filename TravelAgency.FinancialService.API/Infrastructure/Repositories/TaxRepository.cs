@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using TravelAgency.FinancialService.API.Domain.Entities;
+using TravelAgency.FinancialService.API.Common.Models;
 using TravelAgency.FinancialService.API.Infrastructure.Interfaces;
 
 namespace TravelAgency.FinancialService.API.Infrastructure.Repositories;
@@ -13,13 +13,13 @@ public sealed class TaxRepository : ITaxRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Tax>> ListAsync(DateTime TransactionDate, CancellationToken cancellationToken)
+    public async Task<IEnumerable<TaxDto>> ListWithTaxTypeAsync(DateTime TransactionDate, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         using var connection = _context.CreateConnection();
 
-        var fees = await connection.QueryAsync<Tax>("SELECT * FROM GetTaxesByTransactionDate(@TransactionDate)", new { TransactionDate });
+        var fees = await connection.QueryAsync<TaxDto>("SELECT * FROM GetTaxesByTransactionDate(@TransactionDate)", new { TransactionDate });
 
         return fees;
     }

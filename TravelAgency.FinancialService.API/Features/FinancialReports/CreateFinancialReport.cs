@@ -38,19 +38,17 @@ public sealed class CreateFinancialReportEndpoint : Endpoint<CreateFinancialRepo
     }
 }
 
-public sealed class CreateTaxTypeHandler : IRequestHandler<CreateFinancialReportRequest, CreateFinancialReportResponse>
+public sealed class CreateFinancialReportHandler : IRequestHandler<CreateFinancialReportRequest, CreateFinancialReportResponse>
 {
     private readonly IFinancialReportRepository _financialReportRepository;
     private readonly IServiceFeeRepository _serviceFeeRepository;
-    private readonly ITaxTypeRepository _taxTypeRepository;
     private readonly ITaxRepository _taxRepository;
     private readonly ITaxFinancialReportRepository _taxFinancialReportRepository;
 
-    public CreateTaxTypeHandler(IFinancialReportRepository financialReportRepository, IServiceFeeRepository serviceFeeRepository, ITaxTypeRepository taxTypeRepository, ITaxRepository taxRepository, ITaxFinancialReportRepository taxFinancialReportRepository)
+    public CreateFinancialReportHandler(IFinancialReportRepository financialReportRepository, IServiceFeeRepository serviceFeeRepository, ITaxRepository taxRepository, ITaxFinancialReportRepository taxFinancialReportRepository)
     {
         _financialReportRepository = financialReportRepository;
         _serviceFeeRepository = serviceFeeRepository;
-        _taxTypeRepository = taxTypeRepository;
         _taxRepository = taxRepository;
         _taxFinancialReportRepository = taxFinancialReportRepository;
     }
@@ -66,8 +64,8 @@ public sealed class CreateTaxTypeHandler : IRequestHandler<CreateFinancialReport
         var financialReportId = await _financialReportRepository.CreateAsync(report, cancellationToken);
 
         var taxes = await GetCountedTaxesAsync(request.Incomes, financialReportId, cancellationToken);
-        
-        await _taxFinancialReportRepository.CreateManyAsync(taxes, cancellationToken);  
+
+        await _taxFinancialReportRepository.CreateManyAsync(taxes, cancellationToken);
 
         return new CreateFinancialReportResponse(financialReportId);
     }
@@ -98,44 +96,36 @@ public sealed class CreateTaxTypeHandler : IRequestHandler<CreateFinancialReport
     private async Task<IEnumerable<TaxFinancialReportDto>> GetCountedTaxesAsync(IEnumerable<IncomeDto> incomes, int financialReportId, CancellationToken cancellationToken)
     {
         var oldestIncomeDate = incomes.Select(x => x.IncomeDate).OrderBy(x => x).First();
-        var tax = await _taxRepository.ListAsync(oldestIncomeDate, cancellationToken);
-        var taxTypes = await _taxTypeRepository.ListAsync(tax.Select(x => x.TaxTypeId).Distinct(), cancellationToken);
-        var typeAndSum = new Dictionary<int, decimal>();
+        var taxesWithTypes = await _taxRepository.ListWithTaxTypeAsync(oldestIncomeDate, cancellationToken);
+        var taxTypes = taxesWithTypes.Select(x => x.TaxTypeId).Distinct();
+        var taxFinancialReportDictionary = new Dictionary<int, TaxFinancialReportDto>();
 
         foreach (var item in incomes)
         {
-            foreach (var type in taxTypes.Select(x => x.Id))
+            foreach (var type in taxTypes)
             {
-                var percent = tax
-                    .Where(x => type == x.TaxTypeId &&
+                var tax = taxesWithTypes.First(x => type == x.TaxTypeId &&
                         (TaxSpecification.WasTransationMadeInOldTaxSpan(x.ActiveFrom, x.ActiveTo, item.IncomeDate)
-                        || TaxSpecification.WasTransationMadeInLatestTaxSpan(x.ActiveFrom, x.ActiveTo, item.IncomeDate)))
-                    .Select(x => x.PercentValue)
-                    .First();
+                        || TaxSpecification.WasTransationMadeInLatestTaxSpan(x.ActiveFrom, x.ActiveTo, item.IncomeDate)));
 
 
-                if (typeAndSum.ContainsKey(type))
+                var cost = TaxSpecification.CountTax(item.Cost, tax.PercentValue);
+
+                if (taxFinancialReportDictionary.ContainsKey(type))
                 {
-                    typeAndSum[type] += TaxSpecification.CountTax(item.Cost, percent);
+                    taxFinancialReportDictionary[type].AddToTaxCost(cost);
                 }
                 else
                 {
-                    typeAndSum.Add(type, TaxSpecification.CountTax(item.Cost, percent));
+                    taxFinancialReportDictionary.Add(type, new TaxFinancialReportDto(tax.TaxTypeName, financialReportId, cost));
                 }
             }
         }
 
-        var taxFinancialReportList = new List<TaxFinancialReportDto>();
-        foreach (var item in typeAndSum)
-        {
-            var type = taxTypes.FirstOrDefault(x => x.Id == item.Key);
-            taxFinancialReportList.Add(new TaxFinancialReportDto(type!.Name, item.Value, financialReportId));
-        }
-
-        return taxFinancialReportList;
+        return taxFinancialReportDictionary.Select(x => x.Value);
     }
 
-    private DateTime GetOldestIncomeTransactionDate(IEnumerable<IncomeDto> incomes) 
+    private DateTime GetOldestIncomeTransactionDate(IEnumerable<IncomeDto> incomes)
     {
         return GetOldestTransactionDate(incomes.Select(x => x.IncomeDate));
     }
